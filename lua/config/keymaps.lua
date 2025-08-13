@@ -31,3 +31,11 @@ vim.keymap.set({ "n" }, "<C-`>", function()
   Snacks.terminal(nil, { cwd = LazyVim.root(), win = { position = "bottom" } })
 end, { desc = "Terminal (Root Dir)" })
 vim.keymap.set({ "t" }, "<C-`>", "<C-\\><C-n>")
+
+vim.keymap.set({ "n", "v", "o" }, "'", "<Nop>", { noremap = true, silent = true, nowait = true })
+vim.keymap.set({ "n", "v", "o" }, "`", "<Nop>", { noremap = true, silent = true, nowait = true })
+local wk = require("which-key")
+wk.add({
+  { "'", mode = { "n", "v", "o" }, hidden = true },
+  { "`", mode = { "n", "v", "o" }, hidden = true },
+})
