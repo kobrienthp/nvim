@@ -7,7 +7,10 @@ return {
       vim.list_extend(opts.ensure_installed, {
         "bibtex",
         "latex",
-        -- you can add more here
+        "python",
+        "toml",
+        "json",
+        "yaml",
       })
     end
     if type(opts.highlight.disable) == "table" then
