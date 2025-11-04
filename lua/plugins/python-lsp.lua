@@ -17,54 +17,72 @@ return {
     "neovim/nvim-lspconfig",
     opts = {
       servers = {
-        -- Ruff: ultra-fast lints/fixes; let Pyright handle hover
-        ruff_lsp = {
+        -- Disable the legacy ruff_lsp completely
+        ruff_lsp = false,
+
+        -- Use the modern "ruff" server for linting/quickfixes only
+        ruff = {
           on_attach = function(client, _)
+            -- Keep diagnostics and code actions from Ruff, but
+            -- turn off features that should come from Pyright.
+            client.server_capabilities.hoverProvider = false
+            client.server_capabilities.definitionProvider = false
+            client.server_capabilities.referencesProvider = false
+            client.server_capabilities.typeDefinitionProvider = false
+            client.server_capabilities.declarationProvider = false
+            client.server_capabilities.implementationProvider = false
+            client.server_capabilities.renameProvider = false
+            -- Optional: if you don’t want Ruff to format
             client.server_capabilities.documentFormattingProvider = false
             client.server_capabilities.documentRangeFormattingProvider = false
-            client.server_capabilities.hoverProvider = false
           end,
         },
 
-        -- Pyright: types, hover, jumps, rename, etc.
+        -- Pyright: types, hovers, jumps, rename, cross-file refs
         pyright = {
+          single_file_support = false,
           settings = {
             python = {
               analysis = {
-                typeCheckingMode = "basic", -- or "strict"
+                diagnosticMode = "workspace",
+                typeCheckingMode = "basic",
                 autoImportCompletions = true,
+                autoSearchPaths = true,
                 useLibraryCodeForTypes = true,
-                extraPaths = { "src" },
+                extraPaths = { "src", "." }, -- adjust to your layout
               },
             },
           },
         },
       },
 
-      -- Custom setup so Pyright prefers a project-local .venv python
+      -- Custom setup so Pyright prefers a project-local .venv python and stable roots
       setup = {
         pyright = function(_, opts)
           local util = require("lspconfig.util")
-          opts.root_dir = util.root_pattern("pyproject.toml", "setup.cfg", "setup.py", "requirements.txt", ".git")
+          opts.root_dir = util.root_pattern(
+            "pyproject.toml",
+            "pyrightconfig.json",
+            "setup.cfg",
+            "setup.py",
+            "requirements.txt",
+            ".git"
+          )
+          opts.single_file_support = false
 
           opts.before_init = function(_, config)
             local uv = vim.uv or vim.loop
             local cwd = uv.cwd()
-            local venv = nil
-            local candidates = {
+            for _, p in ipairs({
               cwd .. "/.venv/bin/python", -- Unix
               cwd .. "/.venv/Scripts/python.exe", -- Windows
-            }
-            for _, p in ipairs(candidates) do
+            }) do
               if vim.fn.executable(p) == 1 then
-                venv = p
+                config.settings = config.settings or {}
+                config.settings.python = config.settings.python or {}
+                config.settings.python.pythonPath = p
                 break
               end
-            end
-            if venv then
-              config.settings = config.settings or {}
-              config.settings.python = config.settings.python or {}
-              config.settings.python.pythonPath = venv
             end
           end
 
