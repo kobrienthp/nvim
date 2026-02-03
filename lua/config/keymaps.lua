@@ -39,3 +39,6 @@ wk.add({
   { "'", mode = { "n", "v", "o" }, hidden = true },
   { "`", mode = { "n", "v", "o" }, hidden = true },
 })
+
+vim.keymap.set("n", "<leader>bh", "<cmd>BufferLineMovePrev<CR>", { desc = "Move buffer left" })
+vim.keymap.set("n", "<leader>bl", "<cmd>BufferLineMoveNext<CR>", { desc = "Move buffer right" })
